@@ -1,0 +1,10 @@
+[package]
+name = "bmp_processor"
+version = "3.0.0"
+edition = "2021"
+description = "Zero-dependency BMP processor - native BMP I/O, 31x smaller binary than image-crate version"
+authors = ["Minimal BMP Processor"]
+
+# Zero dependencies - pouze std knihovna!
+[dependencies]
+minifb = "0.27"

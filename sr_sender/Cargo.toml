@@ -1,0 +1,7 @@
+[package]
+name = "sr_sender"
+version = "0.1.0"
+edition = "2024"
+description = "Send one raw TCP command to a Keyence reader"
+
+[dependencies]
