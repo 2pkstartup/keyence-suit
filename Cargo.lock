@@ -24,6 +24,7 @@ checksum = "812e12b5285cc515a9c72a5c1d3b6d46a19dac5acfef5265968c166106e31dd3"
 name = "bmp_processor"
 version = "3.0.0"
 dependencies = [
+ "keyence_protocol",
  "minifb",
 ]
 
@@ -212,6 +213,9 @@ dependencies = [
 [[package]]
 name = "keyence_collector"
 version = "0.1.0"
+dependencies = [
+ "keyence_protocol",
+]
 
 [[package]]
 name = "keyence_protocol"

@@ -2,6 +2,7 @@
 mod config;
 
 use config::Config;
+use keyence_protocol::read_protocol_version;
 use std::env;
 use std::error::Error;
 use std::io::{BufRead, BufReader, Read, Write};
@@ -31,6 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let (mut parent, _) = parent_listener.accept()?;
     parent.set_read_timeout(Some(Duration::from_secs(10)))?;
+    read_protocol_version(&mut parent)?;
     let bmp = read_frame(&mut parent)?;
     let name = String::from_utf8(read_frame(&mut parent)?)?;
 

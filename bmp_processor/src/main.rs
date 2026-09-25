@@ -6,6 +6,7 @@
  * BMP je nejjednodušší formát - žádné komprese, přímé pixely
  */
 
+use keyence_protocol::{read_frame as read_protocol_frame, read_protocol_version};
 use std::env;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -681,8 +682,9 @@ fn collector_is_running() -> bool {
 }
 
 fn process_socket_connection(stream: &mut TcpStream) -> Result<(), String> {
-    let bmp = read_frame(stream)?;
-    let name = String::from_utf8(read_frame(stream)?)
+    read_protocol_version(stream).map_err(|error| error.to_string())?;
+    let bmp = read_protocol_frame(stream).map_err(|error| error.to_string())?;
+    let name = String::from_utf8(read_protocol_frame(stream).map_err(|error| error.to_string())?)
         .map_err(|error| format!("BMP filename is not UTF-8: {error}"))?;
     let points = parse_coordinates_from_filename(&name)?;
     let output_file = output_filename(&name)?;
@@ -783,20 +785,4 @@ fn output_filename(filename: &str) -> Result<String, String> {
     // Windows reserves ':' in file names; preserve both values with a safe separator.
     let safe_metadata = metadata.replace(':', "_");
     Ok(format!("{safe_metadata}.bmp"))
-}
-
-fn read_frame(stream: &mut TcpStream) -> Result<Vec<u8>, String> {
-    let mut length = [0u8; 8];
-    stream
-        .read_exact(&mut length)
-        .map_err(|error| format!("Cannot read frame length: {error}"))?;
-    let length = u64::from_be_bytes(length);
-    if length > 64 * 1024 * 1024 {
-        return Err("Frame is too large".to_string());
-    }
-    let mut data = vec![0u8; length as usize];
-    stream
-        .read_exact(&mut data)
-        .map_err(|error| format!("Cannot read frame: {error}"))?;
-    Ok(data)
 }

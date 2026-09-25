@@ -7,4 +7,5 @@ authors = ["Minimal BMP Processor"]
 
 # Zero dependencies - pouze std knihovna!
 [dependencies]
+keyence_protocol = { path = "../keyence_protocol" }
 minifb = "0.27"

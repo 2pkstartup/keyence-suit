@@ -98,8 +98,7 @@ impl Config {
         // použijeme na obou místech - vyhneme se tak druhému parsování
         // stejné hodnoty i nutnosti `.unwrap()` v `unwrap_or_else`.
         let ftp_bind = required(&values, "ftp_bind")?;
-        let ftp_advertise =
-            optional(&values, "ftp_advertise").unwrap_or_else(|| ftp_bind.clone());
+        let ftp_advertise = optional(&values, "ftp_advertise").unwrap_or_else(|| ftp_bind.clone());
 
         Ok(Self {
             ftp_bind,

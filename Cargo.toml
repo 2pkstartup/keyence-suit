@@ -3,7 +3,7 @@ resolver = "2"
 
 members = [
     "keyence_protocol",
-    "keyence_collector-review",
-    "bmp_processor_v1.0",
-    "keyence_command_sender",
+    "keyence_collector",
+    "bmp_processor",
+    "sr_sender",
 ]

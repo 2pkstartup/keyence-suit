@@ -38,10 +38,11 @@ Pokud se `bmp_processor.exe` spustí bez argumentů, poslouchá na TCP portu `91
 Na Windows zároveň automaticky spustí `keyence_collector.exe` ze stejné složky,
 pokud tento proces ještě neběží. Obě EXE a `keyence-collector.conf` proto umístěte
 do jednoho adresáře.
-`keyence_collector` mu předává dva délkové rámce:
+`keyence_collector` mu předává nejprve verzi protokolu a potom dva délkové rámce:
 
-1. BMP data.
-2. Název BMP souboru ve formátu obsahujícím čtyři body, například
+1. Verze protokolu jako 2 bajty `u16` big-endian.
+2. BMP data.
+3. Název BMP souboru ve formátu obsahujícím čtyři body, například
    `scan.BMP100-100_600-100_600-400_100-400.BMP`.
 
 Processor podle názvu vykreslí zelený čtyřúhelník a uloží výsledek jako

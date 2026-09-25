@@ -1,12 +1,11 @@
+use keyence_protocol::read_frame as read_protocol_frame;
 use minifb::{Key, Window, WindowOptions};
 use std::env;
-use std::io::Read;
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::thread;
 use std::time::Duration;
 
 const DEFAULT_ADDRESS: &str = "127.0.0.1:9200";
-const MAX_IMAGE_SIZE: u64 = 64 * 1024 * 1024;
 
 fn main() -> Result<(), String> {
     let address = env::var("BMP_GUI_ADDRESS").unwrap_or_else(|_| DEFAULT_ADDRESS.to_string());
@@ -29,11 +28,13 @@ fn main() -> Result<(), String> {
                     eprintln!("GUI: nelze nastavit blokující spojení od {peer}: {error}");
                     continue;
                 }
-                match read_frame(&mut stream) {
-                    Ok(image) => match read_frame(&mut stream).and_then(|metadata| {
-                        String::from_utf8(metadata)
-                            .map_err(|error| format!("metadata nejsou UTF-8: {error}"))
-                    }) {
+                match read_protocol_frame(&mut stream).map_err(|error| error.to_string()) {
+                    Ok(image) => match read_protocol_frame(&mut stream)
+                        .map_err(|error| error.to_string())
+                        .and_then(|metadata| {
+                            String::from_utf8(metadata)
+                                .map_err(|error| format!("metadata nejsou UTF-8: {error}"))
+                        }) {
                         Ok(metadata) => match decode_bmp(&image) {
                             Ok((width, height, pixels)) => {
                                 if (width, height) != window.get_size() {
@@ -70,22 +71,6 @@ fn main() -> Result<(), String> {
             .map_err(|error| format!("Nelze vykreslit BMP: {error}"))?;
     }
     Ok(())
-}
-
-fn read_frame(stream: &mut TcpStream) -> Result<Vec<u8>, String> {
-    let mut length_bytes = [0_u8; 8];
-    stream
-        .read_exact(&mut length_bytes)
-        .map_err(|error| format!("nelze načíst délku BMP: {error}"))?;
-    let length = u64::from_be_bytes(length_bytes);
-    if length == 0 || length > MAX_IMAGE_SIZE {
-        return Err(format!("neplatná velikost BMP: {length}"));
-    }
-    let mut image = vec![0_u8; length as usize];
-    stream
-        .read_exact(&mut image)
-        .map_err(|error| format!("nelze načíst BMP data: {error}"))?;
-    Ok(image)
 }
 
 fn decode_bmp(data: &[u8]) -> Result<(usize, usize, Vec<u32>), String> {

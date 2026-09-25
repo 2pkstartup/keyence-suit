@@ -21,15 +21,14 @@ use crate::config::Config;
 use std::error::Error;
 #[cfg(unix)]
 use std::fs;
-use std::io::Write;
 #[cfg(windows)]
 use std::net::{Shutdown, SocketAddr, TcpStream};
 #[cfg(unix)]
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::sync::mpsc::Receiver;
+use std::time::Duration;
 #[cfg(unix)]
 use std::time::Instant;
-use std::time::Duration;
 
 /// Typ zprávy posílané z FTP vlákna do pipeline.
 /// `enum` s pojmenovanými poli (`Bmp { data, name }`) je tu zatím jediná
@@ -42,6 +41,7 @@ pub enum Input {
 }
 
 /// Jak dlouho čekat na připojení rodičovského procesu, než zprávu
+use keyence_protocol::{write_frame, write_protocol_version};
 /// vzdáme jako nedoručenou. Bez tohoto limitu by aplikace mohla na
 /// `accept()`/`connect()` čekat navěky, kdyby parent proces spadl nebo
 /// se opozdil se startem.
@@ -211,6 +211,7 @@ fn send_to_parent(listener: &UnixListener, bmp: &[u8], name: &str) -> Result<(),
     // by se jinak mohl zablokovat navěky.
     socket.set_write_timeout(Some(Duration::from_secs(10)))?;
 
+    write_protocol_version(&mut socket)?;
     write_frame(&mut socket, bmp)?;
     write_frame(&mut socket, name.as_bytes())?;
 
@@ -233,25 +234,10 @@ fn send_to_parent(address: &str, bmp: &[u8], name: &str) -> Result<(), Box<dyn E
 
     socket.set_write_timeout(Some(Duration::from_secs(10)))?;
 
+    write_protocol_version(&mut socket)?;
     write_frame(&mut socket, bmp)?;
     write_frame(&mut socket, name.as_bytes())?;
     socket.shutdown(Shutdown::Write)?;
-    Ok(())
-}
-
-/// Zapíše jeden "rámec" (frame): 8bajtová délka v big-endian + samotná
-/// data. Funkce je GENERICKÁ přes `W: Write` (generický parametr typu
-/// ohraničený traitem `Write`) - díky tomu stejná implementace funguje
-/// jak pro `UnixStream`, tak pro `TcpStream` (a teoreticky pro cokoliv
-/// jiného, co umí zapisovat bajty), aniž bychom museli mít dvě téměř
-/// identické kopie kódu pro Unix a Windows.
-fn write_frame<W: Write>(socket: &mut W, data: &[u8]) -> Result<(), Box<dyn Error>> {
-    // `to_be_bytes()` převede číslo na pole bajtů ve "big-endian" pořadí
-    // (nejvýznamnější bajt první) - je potřeba, aby čtecí strana věděla
-    // přesně, jak délku dekódovat, bez ohledu na to, na jaké architektuře
-    // (little/big-endian) běží.
-    socket.write_all(&(data.len() as u64).to_be_bytes())?;
-    socket.write_all(data)?;
     Ok(())
 }
 
