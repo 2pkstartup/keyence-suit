@@ -1,1 +1,0 @@
-C:\Users\herzog\OneDrive\ -\ Fujikoki\ Czech\ s.r.o\_dev\Rust\keyence-suit\target\release\sr_sender.exe: C:\Users\herzog\OneDrive\ -\ Fujikoki\ Czech\ s.r.o\_dev\Rust\keyence-suit\sr_sender\src\main.rs
